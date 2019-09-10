@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
+        <title>Video Call App Demo</title>
+        
+        <!-- <link rel="stylesheet" href="../bootstrap/dist/css/bootstrap.min.css"> -->
+        <!-- <script type="text/javascript" src="../bootstrap/dist/css/bootstrap.min.css"></script> -->
+
+        <link rel="chrome-webstore-item" href="https://chrome.google.com/webstore/detail/screen-capturing/ajhifddimkapgcifgcodmmfdlknahffk">
+        <link rel="stylesheet" href="./assets/css/style.css">
+        <link rel="stylesheet" href="./assets/css/userList.css">
+
+        <script type="text/javascript" src="authentication.service.js"></script>
+        <script type="text/javascript" src="./router.js"></script>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="../socket.io-client/dist/socket.io.js"></script>
+        <script type="text/javascript" src="../easyrtc/api//easyrtc.js"></script>
+        <script type="text/javascript" src="../easyrtc/api/labs/desktop_capture_iframe_version.js"></script>
+        <script type="text/javascript" src="./assets/js/home.js"></script>
+        <script type="text/javascript" src="./assets/js/login.js"></script>
+
+        <!-- Styles used within the demo -->
+		<style>
+		.login-form {
+			width: 300px;
+			margin: 0 auto;
+			font-family: Tahoma, Geneva, sans-serif;
+		}
+		.login-form h1 {
+			text-align: center;
+			color: #4d4d4d;
+			font-size: 24px;
+			padding: 20px 0 20px 0;
+		}
+		.login-form input[type="password"],
+		.login-form input[type="text"] {
+			width: 100%;
+			padding: 15px;
+			border: 1px solid #dddddd;
+			margin-bottom: 15px;
+			box-sizing:border-box;
+		}
+		.login-form .login-btn {
+			width: 100%;
+			padding: 15px;
+			background-color: #535b63;
+			border: 0;
+			box-sizing: border-box;
+			cursor: pointer;
+			font-weight: bold;
+			color: #ffffff;
+		}
+    </style>
+
+       <style type="text/css">
+            #demoContainer {
+                position:fixed;
+                height: 100%;
+            }
+            #connectControls {
+                float:right;
+                right:0;
+                width:20%;
+                height: 100%;
+                text-align:center;
+                border: 0.5px solid black;
+            }
+            #otherClients {
+                height:100%;
+                overflow-y:scroll;
+            }
+            #videos {
+                float: left;
+                width: 80%;
+            }  
+            .grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(540px, 1fr)); 
+                grid-template-rows: 1fr;
+                grid-gap: 0px;
+            }   
+            .video-panel {
+                display: flex;
+            }
+            .video-panel:before {
+                content: "";
+                display: block;
+                height: 0;
+                width: 0;
+                padding-bottom: calc(9/16 * 100%);
+            } 
+            /* #localVideos {
+                height:0;
+                padding-top: 56.25%;
+                width:100%;
+                float:left;
+            }            */
+            /* #selfVidContainer {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                border:1px solid gray;
+                margin-left:10px;
+            }
+            #streamLabel {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+            } */
+            #callerVideo {
+                height:225px;
+                width:300px;
+                border:1px solid gray;
+                margin-left:10px;
+            }
+            #acceptCallBox {
+                display:none;
+                z-index:2;
+                position:absolute;
+                top:100px;
+                left:400px;
+                border:red solid 2px;
+                background-color:pink;
+                padding:15px;
+            }
+
+            .modal {
+              display: none;
+              position: fixed;
+              z-index: 1000;
+              left: 0;
+              top: 0;
+              width: 100%;
+              height: 100%;
+              overflow: auto;
+              background-color: rgb(0,0,0); /* Fallback color */
+              background-color: rgba(0,0,0,0.4);
+            }
+            .modal-content {
+              background-color: #fefefe;
+              margin: 15% auto;
+              padding: 20px;
+              border: 1px solif #888;
+              width: 50%;
+            }
+        </style>
+        <!--show-->
+    </head>
+    <body id="body" onload="connect()">
+        <!-- Login Page Content -->
+        <div id="login-form" class="login-form" style="display: none;">
+            <h1>Login Form</h1>
+			<form onsubmit="login(); return false;">
+				<input type="text" id="username" placeholder="Username" required>
+				<input type="password" id="password" placeholder="Password" required>
+                <button type="submit" class="login-btn" id="login-btn">Sign in</button>
+            </form>
+        </div>
+        
+        <!-- Main Home Page Content -->
+        <div id="home-content" class="home-content" style="display: none;">
+        <header class="cd-main-header js-cd-main-header">
+            <div class="cd-logo-wrapper">
+              <a href="#0" class="cd-logo"><img src="../assets/img/cd-logo.svg" alt="Logo"></a>
+            </div>
+            <div id="video-controls"></div>
+            <div class="cd-search js-cd-search" id="nav-search">
+              <form>
+                <input class="reset" type="search" placeholder="Search...">
+              </form>
+            </div>
+          
+            <button class="reset cd-nav-trigger js-cd-nav-trigger" aria-label="Toggle menu"><span></span></button>
+          
+            <ul class="cd-nav__list js-cd-nav__list">
+              <li class="cd-nav__item"><a href="#0">Support</a></li>
+              <li class="cd-nav__item cd-nav__item--has-children cd-nav__item--account js-cd-item--has-children">
+                <a href="#0">
+                  <img src="../assets/img/cd-avatar.svg" alt="avatar">
+                  <span>Account</span>
+                </a>
+            
+                <ul class="cd-nav__sub-list">
+                  <li class="cd-nav__sub-item"><a href="#0">My Account</a></li>
+                  <li class="cd-nav__sub-item"><a href="#0">Edit Account</a></li>
+                  <li class="cd-nav__sub-item"><a href="#0">Logout</a></li>
+                </ul>
+              </li>
+            </ul>
+          </header> <!-- .cd-main-header -->
+
+          <main class="cd-main-content">
+            <nav class="cd-side-nav js-cd-side-nav" id="sideNav">
+              <ul class="cd-side__list js-cd-side__list">
+                <!-- <li class="cd-side__label"><span>Main</span></li> -->
+                <li class="cd-side__item cd-side__item--has-children cd-side__item--overview js-cd-item--has-children">
+                  <a onclick="createConf()">Create Conference</a>
+                  
+                  <!-- <ul class="cd-side__sub-list">
+                    <li class="cd-side__sub-item"><a href="#0">All Data</a></li>
+                    <li class="cd-side__sub-item"><a href="#0">Category 1</a></li>
+                    <li class="cd-side__sub-item"><a href="#0">Category 2</a></li>
+                  </ul> -->
+                </li>
+        
+                <li class="cd-side__item cd-side__item--has-children cd-side__item--notifications cd-side__item--selected js-cd-item--has-children">
+                  <a href="#0">Notifications<span class="cd-count">3</span></a>
+                  
+                  <ul class="cd-side__sub-list">
+                    <li class="cd-side__sub-item"><a aria-current="page" href="#0">All Notifications</a></li>
+                    <li class="cd-side__sub-item"><a href="#0">Friends</a></li>
+                    <li class="cd-side__sub-item"><a href="#0">Other</a></li>
+                  </ul>
+                </li>
+            
+                <li class="cd-side__item cd-side__item--has-children cd-side__item--comments js-cd-item--has-children">
+                  <a href="#0">Broadcast</a>
+                  
+                  <ul class="cd-side__sub-list">
+                    <li class="cd-side__sub-item"><a href="#0">All Comments</a></li>
+                    <li class="cd-side__sub-item"><a href="#0">Edit Comment</a></li>
+                    <li class="cd-side__sub-item"><a href="#0">Delete Comment</a></li>
+                  </ul>
+                </li>
+              </ul>
+            
+              <ul class="cd-side__list js-cd-side__list">
+                <li class="cd-side__label"><span>Secondary</span></li>
+                <li class="cd-side__item cd-side__item--has-children cd-side__item--bookmarks js-cd-item--has-children">
+                  <a href="#0">History</a>
+                  
+                  <!-- <ul class="cd-side__sub-list">
+                    <li class="cd-side__sub-item"><a href="#0">All Bookmarks</a></li>
+                    <li class="cd-side__sub-item"><a href="#0">Edit Bookmark</a></li>
+                    <li class="cd-side__sub-item"><a href="#0">Import Bookmark</a></li>
+                  </ul> -->
+                </li>
+        
+                <!-- <li class="cd-side__item cd-side__item--has-children cd-side__item--images js-cd-item--has-children">
+                  <a href="#0">Images</a>
+                  
+                  <ul class="cd-side__sub-list">
+                    <li class="cd-side__sub-item"><a href="#0">All Images</a></li>
+                    <li class="cd-side__sub-item"><a href="#0">Edit Image</a></li>
+                  </ul>
+                </li> -->
+            
+                <!-- <li class="cd-side__item cd-side__item--has-children cd-side__item--users js-cd-item--has-children">
+                  <a href="#0">Users</a>
+                  
+                  <ul class="cd-side__sub-list">
+                    <li class="cd-side__sub-item"><a href="#0">All Users</a></li>
+                    <li class="cd-side__sub-item"><a href="#0">Edit User</a></li>
+                    <li class="cd-side__sub-item"><a href="#0">Add User</a></li>
+                  </ul>
+                </li> -->
+
+              </ul>
+            
+              <ul class="cd-side__list js-cd-side__list">
+                <li class="cd-side__btn"><button class="reset" href="#0">+ Button</button></li>
+              </ul>
+            </nav>
+          
+            <div class="">
+              
+                <div id="">
+                    <div id="main">
+                        
+                        <!-- Video Content -->
+        
+                        <div id="demoContainer">
+                            <div id="connectControls">
+                                <button id="hangupButton" disabled="disabled" onclick="hangup()">Hangup</button>
+                                <div id="iam">Not yet connected...</div>
+                                <div id="videoSrcBlk">
+                                </div>
+                                
+                                <br />
+                                <strong>Connected users:</strong>
+                                <div id="otherClients"></div>
+                            </div>
+        
+                            <div autoplay="autoplay" id="videos">
+                                <!-- <h3>Local media streams</h3> -->
+                                <div autoplay="autoplay" id="localVideos"></div>
+                                <!-- <h3>Remote media streams</h3> -->
+                                <div autoplay="autoplay" id="remoteVideos"></div>
+                                
+                            </div>
+                            <div id="acceptCallBox"> <!-- Should be initially hidden using CSS -->
+                                <div id="acceptCallLabel"></div>
+                                <button id="callAcceptButton" >Accept</button> <button id="callRejectButton">Reject</button>
+                            </div>
+                        </div>
+                          
+                        <!-- End Video Content -->
+                        
+                        <!-- Create Conference Section -->
+                        <div id="userListContainer" style="display:none;">
+                          <p>Conference Name: <input type="text" id="rmName" required></p>  
+                          <p>Select Conference Members</p>
+                            <ul id="userList">
+                                <li id="dept"><span class="caret">Beverages</span>
+                                  <ul id="users" class="nested">
+                                    <li><input type="checkbox" value="Test Test" name="user">user1</li>
+                                    <li><input type="checkbox" name="user">user2</li>
+                                    <li><input type="checkbox" name="user">user3</li>
+                                    <li><input type="checkbox" name="user">user4</li>                                   
+                                  </ul>
+                                </li>
+                              </ul> 
+                            <button id="callSelected" onclick="callSelected()">Start Conference Now</button>
+                            <button id="sendInvite" onclick="sendInvite()">Send Invite</button>
+                        </div>
+                        <!-- invtie modal -->
+                        <div class="modal" id="inviteModal">
+                          <div class="modal-content">
+                            <p>Conference Name: <input type="text" id="rmNameOk" readonly></p>  
+                            <p>Conference Members:</p>
+                              <div style="margin-left: 20px" id="inviteMembers"></div>
+                            <p>Date: <input type="date" id="confDate">
+                                Time: <input type="time" id="confTime">
+                            </p>
+                             <p>Description: <textarea id="confDescription"></textarea></p>
+                            <br>
+                            <div style="text-align: center"><button id="inviteSend">Send</button><button id="inviteCancel">Cancel</button></div>
+                          </div>
+                        </div>
+                    </div>
+        
+            
+            </div> <!-- .content-wrapper -->
+          </main> <!-- .cd-main-content -->
+        </div>
+          <script src="../assets/js/util.js"></script> <!-- util functions included in the CodyHouse framework -->
+          <script src="../assets/js/menu-aim.js"></script>
+          <script src="../assets/js/main.js"></script>
+                   
+    </body>
+</html>

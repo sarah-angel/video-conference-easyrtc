@@ -1,0 +1,7 @@
+make rightside div full length and a bit wider
+make selvideo init in the middle of left float div
+collaps sidenav on calls
+onload create selfvideo to fullsize
+on first call put remoteVid to fullsize then selfVideo to small in the corner overlay??
+on second caller join split fullsize to two
+on ith join split fullsize to i

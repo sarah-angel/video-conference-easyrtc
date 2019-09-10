@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html ng-app="app">
+<head>
+    <meta charset="utf-8" />
+    <title>Video Conference App</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="chrome-webstore-item" href="https://chrome.google.com/webstore/detail/screen-capturing/ajhifddimkapgcifgcodmmfdlknahffk">
+
+    <style type="text/css">
+        #demoContainer {
+            position:relative;
+        }
+        #connectControls {
+            float:left;
+            width:250px;
+            text-align:center;
+            border: 2px solid black;
+        }
+        #otherClients {
+            height:200px;
+            overflow-y:scroll;
+        }
+        #selfVideo {
+            height:225px;
+            width:300px;
+            float:left;
+            border:1px solid gray;
+            margin-left:10px;
+        }
+        #callerVideo {
+            height:225px;
+            width:300px;
+            border:1px solid gray;
+            margin-left:10px;
+        }
+        #acceptCallBox {
+            display:none;
+            z-index:2;
+            position:absolute;
+            top:100px;
+            left:400px;
+            border:red solid 2px;
+            background-color:pink;
+            padding:15px;
+        }
+    </style>
+    
+</head>
+<body>
+    <div ng-view></div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular-route.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular-cookies.min.js"></script>
+
+    <script src="app.js"></script>
+    <script src="js/home/home-controller.js"></script>
+    <script src="js/login/login-controller.js"></script>
+    <script src="js/register/register-controller.js"></script>
+    <script src="js/vid-home/vid-home-controller.js"></script>
+
+        <script src="/socket.io-client/dist/socket.io.js"></script>
+        <script type="text/javascript" src="easyrtc/api/easyrtc.js"></script>
+        <script type="text/javascript" src="easyrtc/api/labs/desktop_capture_iframe_version.js"></script>
+
+    
+    <script src="userService.svc.js"></script>
+    <script src="authenticationService.svc.js"></script>
+</body>
+</html>
