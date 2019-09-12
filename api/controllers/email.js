@@ -3,14 +3,7 @@ var mailer = require('nodemailer');
 
 module.exports.sendInvite = function(req, res){
     console.log(req.body);
-    var senderPosition = req.body.senderPosition;
-    var senderName = req.body.senderName;
-    var confName = req.body.confName;
-    var date = req.body.date;
-    var time = req.body.time;
-    var description = req.body.description;
-    var link = req.body.link;
-
+    
     var auth = {
         type: 'OAUTH2',
         user: 'sarangel333@gmail.com',

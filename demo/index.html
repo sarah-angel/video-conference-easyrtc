@@ -17,9 +17,13 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
         <script src="../socket.io-client/dist/socket.io.js"></script>
         <script type="text/javascript" src="../easyrtc/api//easyrtc.js"></script>
+        <script type="text/javascript" src="../easyrtc/api//easyrtc_ft.js"></script>
         <script type="text/javascript" src="../easyrtc/api/labs/desktop_capture_iframe_version.js"></script>
         <script type="text/javascript" src="./assets/js/home.js"></script>
         <script type="text/javascript" src="./assets/js/login.js"></script>
+        <script type="text/javascript" src="./assets/js/data-channel.js"></script>
+        <script type="text/javascript" src="./assets/js/file-share.js"></script>
+
 
         <!-- Styles used within the demo -->
 		<style>
@@ -57,7 +61,8 @@
        <style type="text/css">
             #demoContainer {
                 position:fixed;
-                height: 100%;
+                height: 90%;
+                font-size: 15px; 
             }
             #connectControls {
                 float:right;
@@ -91,6 +96,22 @@
                 width: 0;
                 padding-bottom: calc(9/16 * 100%);
             } 
+            .chat-panel {
+                display: none;
+                float:right;
+                right:0;
+                width:20%;
+                height: 100%;
+                padding: 10px;
+                text-align:left;
+                border: 0.5px solid black;
+            }
+            .chat-logs {
+              overflow: auto;
+            }
+            .text-small {
+              font-size: 10px;
+            }
             /* #localVideos {
                 height:0;
                 padding-top: 56.25%;
@@ -294,6 +315,30 @@
                                 <div autoplay="autoplay" id="remoteVideos"></div>
                                 
                             </div>
+
+                            <div class="chat-panel" id="chat-panel">
+                              <div class="chat-logs" id="chat-logs">
+                                <div class="join-msg" id="join-msg" style="text-align: center">Admin: Test Test joined (12:30)</div>
+                                <div class="other-msg">
+                                  <div class="msg-text">This is my message</div>
+                                  <div class="text-small">Admin: Test Test (12:30)</div>
+                                </div>
+                                <div class="other-msg">
+                                  <div class="msg-text">This is my message</div>
+                                  <div class="text-small">Admin: Test Test (12:30)</div>
+                                </div>
+                                <div class="other-msg">
+                                  <div class="msg-text">This is my message</div>
+                                  <div class="text-small">Admin: Test Test (12:30)</div>
+                                </div>
+                                <div class="other-msg self-msg" style="text-align: right" >
+                                  <div class="msg-text">This is my message</div>
+                                  <div class="text-small">You (12:30)</div>
+                                </div>
+                              </div>
+                              <div style="bottom: 0; position: absolute;"><textarea id="chat-msg"></textarea><button id="send-msg-btn">Send</button></div>
+                            </div>
+
                             <div id="acceptCallBox"> <!-- Should be initially hidden using CSS -->
                                 <div id="acceptCallLabel"></div>
                                 <button id="callAcceptButton" >Accept</button> <button id="callRejectButton">Reject</button>

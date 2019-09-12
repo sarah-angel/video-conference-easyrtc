@@ -29,12 +29,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(cors());
+app.options('*', cors());
 
-app.use(function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-    next();
-  });
 
 app.get('/', function(req, res){
     res.sendFile(__dirname + '/demo/index.html');
@@ -44,13 +40,25 @@ app.get('/', function(req, res){
 app.use(passport.initialize());
 app.use('/api', routesApi);
 
-var port = normalizePort(process.env.PORT || '3000');
+//var port = normalizePort(process.env.PORT || '3000');
+var port = process.env.PORT || 3000;
 app.set('port', port);
 
 var server = http.createServer(app);
 //start socket.io so it attaches itself to express server
-var socketServer = socketIo.listen(server, {'log level':1});
-
+//{'log level':1}
+var socketServer = socketIo.listen(server, {
+    handlePreflightRequest: (req, res) => {
+        const headers = {
+            "Access-Control-Allow-Headers":"Content-Type, Authorization",
+            "Access-Control-Allow-Origin": req.headers.origin, 
+            "Access-Control-Allow-Credentials": true
+        };
+        res.writeHead(200, headers);
+        res.end();
+    }
+} );
+socketServer.set('origins', '*:*');
 easyrtc.setOption('logLevel', 'debug');
 
 server.listen(port);
@@ -66,19 +74,19 @@ app.use(function (err, req, res, next){
     }
 });
 
-function normalizePort(val){
-    var port = parseInt(val, 10);
+// function normalizePort(val){
+//     var port = parseInt(val, 10);
 
-    if(isNaN(port)){
-        return val;
-    }
+//     if(isNaN(port)){
+//         return val;
+//     }
 
-    if(port >= 0){
-        return port;
-    }
+//     if(port >= 0){
+//         return port;
+//     }
 
-    return false;
-}
+//     return false;
+// }
 
 function onError(error){
     if(error.syscall !== 'listen'){
@@ -106,11 +114,11 @@ function onError(error){
 
 function onListening() {
     console.log("listening on port");
-    var addr = server.address();
-  var bind = typeof addr === 'string'
-    ? 'pipe ' + addr
-    : 'port ' + addr.port;
-  debug('Listening on ' + bind);
+//     var addr = server.address();
+//   var bind = typeof addr === 'string'
+//     ? 'pipe ' + addr
+//     : 'port ' + addr.port;
+//   debug('Listening on ' + bind);
   }
 
 // Overriding the default easyrtcAuth listener, only so we can directly access its callback

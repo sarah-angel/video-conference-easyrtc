@@ -4,6 +4,7 @@ var selfEasyrtcid = "";
 var haveSelfVideo = false;
 var otherEasyrtcid = null;
 var currentRoom = "default";
+var connectedUsers = [];//array of easyrtcids of connected users
 var needToCallOthers; //call everyone on room entry
 
 function disable(domId) {
@@ -48,6 +49,8 @@ function addMediaStreamToDiv(divId, stream, streamName, isLocal)
 
     if ( easyrtc.getConnectionCount() >= 1 ){
         closeSideNav();
+        document.getElementById("connectControls").style.display = "none";
+        document.getElementById("chat-panel").style.display = "block";
     }
 
     //set video stream size for one on one call
@@ -153,6 +156,11 @@ function connect() {
         }
         console.log("Entered room: " + roomName);
     });
+    easyrtc.enableDataChannels(true)
+    easyrtc.setDataChannelOpenListener(dataChannelOpenListener);
+    easyrtc.setDataChannelCloseListener(dataChannelCloseListener);
+    easyrtc.setPeerListener(addToConversation);
+    //easyrtc.setSocketUrl("//789ea9f3.ngrok.io");
     easyrtc.connect("easyrtc.multistream", loginSuccess, loginFailure);
     easyrtc.setAutoInitUserMedia(false);
     easyrtc.setRoomOccupantListener(roomOccupantListener);
@@ -170,6 +178,7 @@ function connect() {
                         easyrtc.showError(errCode, errText);
                     }, "camera");
     });
+    
     //
     // add an extra button for screen sharing
     //
@@ -225,21 +234,16 @@ function callAll(roomName, occupants, selfInfo){
 }
 
 function roomOccupantListener(roomName, occupants, isPrimary) {
-
+    connectedUsers = occupants;
     if(needToCallOthers){
         function resolveAfter3sec(){
-            //return new Promise(resolve => {
                 setTimeout(() => {
                     for( var easyrtcid in occupants){
                         console.log("have to call: " + easyrtc.idToName(easyrtcid));
-                        
-                        //wait 5sec before calling others
-                            performCall(easyrtcid);
-                        
+                        performCall(easyrtcid);                     
                     }(easyrtcid);
                     needToCallOthers = false;
                 }, 3000);
-            //});
         }
 
         async function asyncCall(){
@@ -278,7 +282,7 @@ function performCall(targetEasyrtcId) {
             callBox.innerHTML = "<div>Sorry, your call to " + userPosition + ": " + easyrtc.idToName(easyrtcid) + " was rejected </div> <button id='rejectOkBtn'>Okay</button>";
             document.getElementById("rejectOkBtn").addEventListener("click", function(){
                 callBox.style.display = "none";
-            })
+            });
             callBox.style.display = "block";
             enable('otherClients');
         }
@@ -287,8 +291,9 @@ function performCall(targetEasyrtcId) {
         }
     };
 
-    var successCB = function() {
+    var successCB = function(otherCaller, mediaType) {
         enable('hangupButton');
+        console.log("mediatype on call: " + mediaType);
     };
     var failureCB = function(errCode, errText) {
         enable('otherClients');
@@ -327,7 +332,6 @@ function disconnect() {
 easyrtc.setStreamAcceptor(function(easyrtcid, stream, streamName) {
     var labelBlock = addMediaStreamToDiv("videos", stream, streamName, false);
     labelBlock.parentNode.id = "remoteBlock" + easyrtcid + streamName;
-
 });
 
 
@@ -377,12 +381,6 @@ function createConf(){
    hideShowDiv();
 
    getDept();
-
-    //getUsers();
-
-  
-
-
 }
 
 function hideShowDiv(){
@@ -397,7 +395,7 @@ function hideShowDiv(){
 //when a department is clicked list of users are fetched and displayed
 function getDept(){
     const Http = new XMLHttpRequest();
-    const url = "http://localhost:3000/api/depts";
+    const url = serverUrl + "/depts";
     
     Http.onreadystatechange = (e) =>{
         console.log(Http.responseText);
@@ -432,7 +430,7 @@ function getDept(){
 function getUsers(dept){
     //http request tests
     const Http = new XMLHttpRequest();
-    const url = "http://localhost:3000/api/listUsers";
+    const url = serverUrl + "/listUsers";
     Http.open("POST", url, true);
     Http.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     Http.send(JSON.stringify({
@@ -547,7 +545,7 @@ function sendInvite(){
         console.log(time);   
         
         const Http = new XMLHttpRequest();
-        url = "http://localhost:3000/api/sendInvite";
+        url = serverUrl + "/sendInvite";
         Http.open("POST", url, true);
         Http.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         Http.send(JSON.stringify({
@@ -576,8 +574,6 @@ function sendInvite(){
             modal.style.display = "none";
         }
     }
-
-
     
 }
 

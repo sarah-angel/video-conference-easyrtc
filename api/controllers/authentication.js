@@ -74,6 +74,7 @@ module.exports.login = function(req, res){
         //var token;
 
         if(err){
+            console.log("error authenticating: " + err);
             res.status(404).json(err);
             return;
         }

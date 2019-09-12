@@ -1,4 +1,5 @@
-
+const serverUrl = location.origin + "/api";
+console.log(location.origin);
 var token = "";
 
 //handle storing token into localStorage and onto the token property
@@ -49,8 +50,10 @@ function isLoggedIn(){
 }
 
 function loginAuth(user){
-    const Http = new XMLHttpRequest();
-    const url = "http://localhost:3000/api/login";
+    const Http = new XMLHttpRequest({mozSytem: true});
+    console.log();
+    const url = serverUrl + "/login";
+    //const url = "http://localhost:3000/api/login";
     Http.open("POST", url, true);
     Http.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     Http.send(JSON.stringify(user));
@@ -77,7 +80,7 @@ function loginAuth(user){
 
  function sendCurrentUserDetails(){
     const Http = new XMLHttpRequest();
-    const url = "http://localhost:3000/api/currentUser";
+    const url = serverUrl + "/currentUser";
     Http.open("POST", url, true);
     Http.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     //Http.setRequestHeader("Authorization", "Bearer " + getToken());
