@@ -6,6 +6,7 @@ var otherEasyrtcid = null;
 var currentRoom = "default";
 var connectedUsers = [];//array of easyrtcids of connected users
 var needToCallOthers; //call everyone on room entry
+var streamCount = 0;
 
 function disable(domId) {
     console.log("about to try disabling " + domId);
@@ -29,8 +30,8 @@ function createLabelledButton(buttonLabel) {
 
 function addMediaStreamToDiv(divId, stream, streamName, isLocal)
 {
-    console.log(easyrtc.getConnectionCount());
-
+    streamCount++;
+        
     var container = document.createElement("div");
     container.className = "video-container";
     container.style.marginBottom = "0px";
@@ -47,14 +48,17 @@ function addMediaStreamToDiv(divId, stream, streamName, isLocal)
         //container.id = "selfVidContainer";
     }
 
-    if ( easyrtc.getConnectionCount() >= 1 ){
+    if ( easyrtc.getConnectionCount() >= 1){
         closeSideNav();
+        document.getElementById("nav-search").style.display = "none";
+        document.getElementById("video-controls").style.display = "block";
         document.getElementById("connectControls").style.display = "none";
         document.getElementById("chat-panel").style.display = "block";
     }
 
     //set video stream size for one on one call
-    if(easyrtc.getConnectionCount() == 1){
+    if(easyrtc.getConnectionCount() == 1 && streamCount == 2){
+        console.log("two streams");
         selfVideo = document.getElementById("selfVideo");
 
         selfVideo.width = 320;
@@ -64,13 +68,13 @@ function addMediaStreamToDiv(divId, stream, streamName, isLocal)
         selfVideo.style.left = 0;
         selfVideo.style.zIndex = 1000;
     }
-    if(easyrtc.getConnectionCount() > 1){
-        document.getElementById(divId).className= "grid";
+    if(easyrtc.getConnectionCount() > 1 || streamCount > 2){
+        console.log("more than two streams");
+        document.getElementById("videos").className= "grid";
 
-        containers = document.getElementsByClassName("video-container")
-        for(var x in containers){
+        var containers = document.getElementsByClassName("video-container");
+        for( var x in containers){
             x.className = "video-panel";
-
         }
         selfVideo = document.getElementById("selfVideo");
         selfVideo.style.cssText = null;
@@ -88,22 +92,62 @@ function addMediaStreamToDiv(divId, stream, streamName, isLocal)
     return labelBlock;
 }
 
+function resizeStreams(){
+    var selfVideo = document.getElementById("selfVideo");
+    if(easyrtc.getConnectionCount() == 0 || streamCount == 1){
+        selfVideo.style.cssText = null;
+        selfVideo.style.width = "100%";
+        selfVideo.style.height = "100%";
+    }
 
+    if ( easyrtc.getConnectionCount() >= 1){
+        closeSideNav();
+        document.getElementById("nav-search").style.display = "none";
+        document.getElementById("video-controls").style.display = "block";
+        document.getElementById("connectControls").style.display = "none";
+        document.getElementById("chat-panel").style.display = "block";
+    }else{
+        openSideNav();
+        document.getElementById("nav-search").style.display = "block";
+        document.getElementById("video-controls").style.display = "none";
+        document.getElementById("connectControls").style.display = "block";
+        document.getElementById("chat-panel").style.display = "none";
+    }
+
+    //set video stream size for one on one call
+    if(easyrtc.getConnectionCount() == 1 && streamCount == 2){
+
+        selfVideo.width = 320;
+        selfVideo.height = 240;
+        selfVideo.style.position = "fixed";
+        selfVideo.style.bottom = 0;
+        selfVideo.style.left = 0;
+        selfVideo.style.zIndex = 1000;
+    }
+    if(easyrtc.getConnectionCount() > 1 || streamCount > 2){
+        document.getElementById("videos").className= "grid";
+
+        containers = document.getElementsByClassName("video-container")
+        for(var i=0; i< containers.length; i++){
+            containers[i].className = "video-panel";
+        }
+        selfVideo.style.cssText = null;
+        selfVideo.style.width = "100%";
+        selfVideo.style.height = "100%";
+
+    }
+}
 
 function createLocalVideo(stream, streamName) {
-    //var labelBlock = 
+    var labelBlock = 
     addMediaStreamToDiv("videos", stream, streamName, true);
-    var closeButton = createLabelledButton("close");
+    var closeButton = document.getElementById("camera-btn");
     closeButton.onclick = function() {
-        easyrtc.closeLocalStream(streamName);
+        easyrtc.closeLocalStream("camera");
         labelBlock.parentNode.parentNode.removeChild(labelBlock.parentNode);
     }
-    var openNav = document.createElement("button");
-    openNav.onclick = function(){
-        openSideNav();
-    }
-    labelBlock.appendChild(openNav);
-    labelBlock.appendChild(closeButton);
+    //labelBlock.appendChild(openNav);
+    //labelBlock.appendChild(closeButton);
 }
 
 var localStreamCount = 0;
@@ -160,40 +204,40 @@ function connect() {
     easyrtc.setDataChannelOpenListener(dataChannelOpenListener);
     easyrtc.setDataChannelCloseListener(dataChannelCloseListener);
     easyrtc.setPeerListener(addToConversation);
-    //easyrtc.setSocketUrl("//789ea9f3.ngrok.io");
     easyrtc.connect("easyrtc.multistream", loginSuccess, loginFailure);
     easyrtc.setAutoInitUserMedia(false);
     easyrtc.setRoomOccupantListener(roomOccupantListener);
     easyrtc.getVideoSourceList(function(videoSrcList) {
-            easyrtc.setVideoSource(videoSrcList[0].deviceId);
-            easyrtc.setVideoDims(1280, 720);
-            easyrtc.initMediaSource(
-                    function(stream) {
-                        createLocalVideo(stream, "camera");
-                        if (otherEasyrtcid) {
-                            easyrtc.addStreamToCall(otherEasyrtcid, streamName);
-                        }
-                    },
-                    function(errCode, errText) {
-                        easyrtc.showError(errCode, errText);
-                    }, "camera");
+        easyrtc.setVideoSource(videoSrcList[0].deviceId);
+        easyrtc.setVideoDims(1280, 720);
+        easyrtc.initMediaSource(
+            function(stream) {
+                createLocalVideo(stream, "camera");
+                if (otherEasyrtcid) {
+                    easyrtc.addStreamToCall(otherEasyrtcid, streamName);
+                }
+            },
+            function(errCode, errText) {
+                easyrtc.showError(errCode, errText);
+            }, "camera");
     });
+    initFileShare();
     
     //
     // add an extra button for screen sharing
     //
-    var screenShareButton = createLabelledButton("Desktop capture/share");
-    var numScreens = 0;
-
-    screenShareButton.onclick = function() {
-        numScreens++;
-        var streamName = "screen" + numScreens;
+    var screenShareBtn = document.getElementById("screen-share-btn");
+    screenShareBtn.addEventListener("click", function(){screenShare();}); 
+    function screenShare() {
+        
+        var streamName = "screen" ;
         easyrtc.initDesktopStream(
                 function(stream) {
-                    createLocalVideo(stream, streamName);
-                    if (otherEasyrtcid) {
-                        easyrtc.addStreamToCall(otherEasyrtcid, streamName);
+                    for(easyrtcid in connectedUsers){
+                        if(easyrtcid == selfEasyrtcid) continue;
+                        easyrtc.addStreamToCall(easyrtcid, streamName);
                     }
+                    
                 },
                 function(errCode, errText) {
                     easyrtc.showError(errCode, errText);
@@ -201,12 +245,28 @@ function connect() {
                 streamName);
     };
 
+    //adding event listeners for video control buttons
+    //setting hangup-btn
+    var hangupbtn = document.getElementById("hangup-btn");
+    hangupbtn.addEventListener("click", function(){hangup();});
+    var sidenavOpen = document.getElementById("sideNav-toggle");
+    sidenavOpen.addEventListener("click", function(){openSideNav();});
+    var sidenavClose = document.getElementById("sideNav-close");
+    sidenavClose.addEventListener("click", function(){closeSideNav();});
+    var addMember = document.getElementById("add-member-btn");
+    addMember.addEventListener("click", function(){
+        console.log("click add member");
+        document.getElementById("chat-panel").style.display = "none";
+        document.getElementById("connectControls").style.display = "block";
+    });
+
 }
 
 
 function hangup() {
     easyrtc.hangupAll();
-    disable('hangupButton');
+    resizeStreams();
+    disable('hangup-btn');
 }
 
 
@@ -292,14 +352,14 @@ function performCall(targetEasyrtcId) {
     };
 
     var successCB = function(otherCaller, mediaType) {
-        enable('hangupButton');
-        console.log("mediatype on call: " + mediaType);
+        enable('hangup-btn');
     };
     var failureCB = function(errCode, errText) {
         enable('otherClients');
         console.log(errText);
     };
     var keys = easyrtc.getLocalMediaIds();
+    console.log(keys);
 
     easyrtc.call(targetEasyrtcId, successCB, failureCB, acceptedCB, keys);
     //enable('hangupButton');
@@ -312,6 +372,9 @@ function loginSuccess(easyrtcid) {
     enable('otherClients');
     selfEasyrtcid = easyrtcid;
     document.getElementById("iam").innerHTML = "I am " + easyrtc.idToName(easyrtcid);//easyrtc.cleanId(easyrtcid);
+
+    easyrtc_ft.buildFileReceiver(acceptRejectFile, blobAcceptor, receiveFileStatus);
+
 }
 
 
@@ -339,6 +402,8 @@ easyrtc.setStreamAcceptor(function(easyrtcid, stream, streamName) {
 easyrtc.setOnStreamClosed(function(easyrtcid, stream, streamName) {
     var item = document.getElementById("remoteBlock" + easyrtcid + streamName);
     item.parentNode.removeChild(item);
+    streamCount--;
+    resizeStreams();
 });
 
 
@@ -378,17 +443,15 @@ easyrtc.setAcceptChecker(function(easyrtcid, acceptor) {
 //
 
 function createConf(){
-   hideShowDiv();
-
+   //hideShowDiv();
+    if($('#demoContainer').css('display')!= 'none'){
+            $('#userListContainer').show().siblings('div').hide();
+        }
    getDept();
 }
 
 function hideShowDiv(){
-    if($('#demoContainer').css('display')!= 'none'){
-        $('#userListContainer').show().siblings('div').hide();
-    }else if ( $('#userListContainer').css('display') != 'none'){
-        $('#demoContainer').show().siblings('div').hide();
-    }
+    
 }
 
 //get list of departments from db and display them as drop down list
@@ -473,6 +536,18 @@ function getUsers(dept){
 function getConferenceDetails(){
     var roomName = document.getElementById("rmName").value;
     if(!roomName){
+        var box = document.getElementById("infoBox");
+        box.style.display = "block";
+        console.log(box);
+        var info = document.createTextNode("Please provide a conference name");
+        var btn = document.createElement("button");
+        btn.appendChild(document.createTextNode("OK"));
+        btn.onclick = function(){
+            box.style.display = "none";
+            return;
+        }
+        box.appendChild(info);
+        box.appendChild(btn);
         console.log("Conference Name cannot be empty");
         return;
     }
@@ -485,7 +560,7 @@ function getConferenceDetails(){
     for(var i=0; i<items.length; i++){
         if(items[i].type=="checkbox" && items[i].checked == true){
             str = items[i].nextElementSibling.innerHTML;
-            name = str.split(": ", 2)[1];
+            name = str.split(":  ", 2)[1];
             selected.push(name);
             selectedString += str + "\n";
         }
@@ -503,13 +578,21 @@ function callSelected(){
     var go = confirm("Starting video conference with: \n" + selectedString);
     if (go == true){
         console.log("calling****");
-        easyrtc.joinRoom(roomName, null, function(roomName){
-            console.log("I'm in room: " + roomName);
-            location.replace(Url);
-
-        }, function(errCode,errText, roomName){
-            console.log("failed to join room: " + errText);
-        })
+        // easyrtc.joinRoom(roomName, null, function(roomName){
+        //     console.log("I'm in room: " + roomName);
+        //     location.replace(Url);
+        
+        // }, function(errCode,errText, roomName){
+        //     console.log("failed to join room: " + errText);
+        // });
+        console.log(selected);
+        for(var i=0; i<selected.length; i++){
+            performCall(easyrtc.usernameToIds(selected[i])[0].easyrtcid);
+            //hideShowDiv();
+            if ( $('#userListContainer').css('display') != 'none'){
+                $('#demoContainer').show().siblings('div').hide();
+            }
+        }
     }else{
         console.log("cancelled selection");
     }
@@ -580,10 +663,14 @@ function sendInvite(){
 function closeSideNav(){
     document.getElementById("sideNav").style.display = "none";
     document.getElementById("demoContainer").style.left = 0;
+    document.getElementById("sideNav-close").style.display = "none";
+    document.getElementById("sideNav-toggle").style.display = "block";
 }
 
 function openSideNav(){
     document.getElementById("sideNav").style.display = "block";
     document.getElementById("demoContainer").style.left = null;
+    document.getElementById("sideNav-toggle").style.display = "none";
+    document.getElementById("sideNav-close").style.display = "inline";
     document.getElementById("selfVideo").style.left = null;
 }
