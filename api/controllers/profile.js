@@ -4,6 +4,9 @@
 var mongoose = require('mongoose');
 var User = mongoose.model('User');
 
+/**
+ * 
+ */
 module.exports.profileRead = function(req, res){
     //if no user id exists in the jwt return a 401
     if(!req.payload._id){

@@ -9,7 +9,7 @@ module.exports.sendInvite = function(req, res){
         user: 'sarangel333@gmail.com',
         clientId: '78839088079-gduh77hj38fqlt4ch3fhgca71g0msuuk.apps.googleusercontent.com',
         clientSecret: 'Z2-NBTvs-w5zsrYtYdNlSEsW',
-        refreshToken: '1/zAykNYSlcbcnNr6usdWbIN-gU5shFpMEJSabWN4hXSc'
+        refreshToken: '1//04LDYnTKurDNJCgYIARAAGAQSNwF-L9Irc72jhHyg9ulAmxqfj2cxFY_9xuFa-KV6BYs8PdUd_5-LB7RuqCJzixqchJ5n6U9RFXk'
     };
     
 

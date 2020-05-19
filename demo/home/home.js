@@ -131,7 +131,7 @@ function connect() {
     //
     // add an extra button for screen sharing
     //
-    var screenShareButton = createLabelledButton("Desktop capture/share");
+    var screenShareButton = document.getElementById("screen-share-btn");
     var numScreens = 0;
 
     screenShareButton.onclick = function() {

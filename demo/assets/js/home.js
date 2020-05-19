@@ -229,7 +229,6 @@ function connect() {
     var screenShareBtn = document.getElementById("screen-share-btn");
     screenShareBtn.addEventListener("click", function(){screenShare();}); 
     function screenShare() {
-        
         var streamName = "screen" ;
         easyrtc.initDesktopStream(
                 function(stream) {
